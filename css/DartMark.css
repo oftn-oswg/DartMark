@@ -35,7 +35,6 @@ body {
 
 .dm_left {
 	width: 680px;
-	background-color: white;
 }
 
 .dm_right {
@@ -73,14 +72,12 @@ body {
 	background-color: #6f001f;
 	font-size: 2em;
 	padding: 0.2em;
+	margin-bottom: 16px;
 	font-family: monospace;
 	color: white;
 }
 
 #dm_selected {
-	position: absolute;
-	bottom: 0; left: 0;
-	padding: 0 0 0.5em 0.5em;
 	font-size: 12px;
 	font-family: monospace;
 }
