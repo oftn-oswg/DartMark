@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>DartMark</title>
+<link type="text/css" href="css/DartMark.css" rel="stylesheet"/>
+<script type="text/javascript" src="js/DartMark.js"></script>
+</head>
+<body>
+<iframe class="dm_frame" src="template.html" id="dm"></iframe>
+<div class="dm_info">
+	<div class="dm_box dm_right">
+		<h2>Commands</h2>
+		<h3>Cursor Movement</h3>
+		<dl>
+			<dt>Esc</dt><dd>Clear selection</dd>
+			<dt>Left</dt><dd>Parent node</dd>
+			<dt>Right</dt><dd>First child</dd>
+			<dt>Up</dt><dd>Previous sibling</dd>
+			<dt>Down</dt><dd>Next sibling</dd>
+		</dl>
+		<h3>Node Manipulation</h3>
+		<dl>
+			<dt>P</dt><dd>Insert node before</dd>
+			<dt>N</dt><dd>Insert node after</dd>
+			<dt>B</dt><dd>Prepend node to children</dd>
+			<dt>A</dt><dd>Append node to children</dd>
+			<dt>W</dt><dd>Wrap node with new</dd>
+			<dt>E</dt><dd>Change element tag</dd>
+			<dt>I</dt><dd>Edit element ID</dd>
+			<dt>Enter</dt><dd>Replace children with text</dd>
+			<dt>D/Delete</dt><dd>Remove node</dd>
+		</dl>
+	</div>
+	<div class="dm_box dm_left">
+		<div id="dm_error" class="hidden"></div>
+	</div>
+	<div id="dm_selected"></div>
+</div>
+<script type="text/javascript">
+var frame, dm;
+
+frame = document.getElementById ("dm");
+frame.addEventListener ("load", function() {
+	dm = new DartMark (frame);
+});
+</script>
+</body>
+</html>
