@@ -4,6 +4,8 @@
  * TODO: Allow clicking breadcrumb to move cursor.
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
+ * TODO: Separate DOM handling code
+ *       and DartMark core and interface code
  **/
 
 function DartMark(frame) {
@@ -21,6 +23,8 @@ function DartMark(frame) {
 }
 
 DartMark.prototype.shortcuts = {
+
+	Space: "toggleHelp",
 
 	Escape: "clearCursor",
 	Left: "moveUp",
@@ -55,6 +59,7 @@ DartMark.prototype.addEvents = function(element) {
 	mapping[8] = "Backspace";
 	mapping[13] = "Enter";
 	mapping[27] = "Escape";
+	mapping[32] = "Space";
 	mapping[37] = "Left";
 	mapping[38] = "Up";
 	mapping[39] = "Right";
@@ -753,4 +758,15 @@ DartMark.prototype.replaceElement = function() {
 			this.changeCursor (newnode);
 		}
 	}, this.cursor.nodeName.toLowerCase ());
+};
+
+DartMark.prototype.toggleHelp = function() {
+	var help;
+
+	help = document.getElementById ("dm_info");
+	if (help) {
+		help.classList.toggle ("hidden");
+	} else {
+		throw new Error ("Bug! Information box could not be located.");
+	}
 };

@@ -20,7 +20,7 @@ body {
 	border: none;
 }
 
-.dm_info {
+#dm_info {
 	position: absolute;
 	width: 928px;
 	background-color: #000;
@@ -63,7 +63,7 @@ body {
 	width: 240px;
 }
 
-#dm_error.hidden {
+.hidden {
 	display: none;
 }
 
