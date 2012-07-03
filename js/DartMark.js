@@ -4,8 +4,6 @@
  * TODO: Allow clicking breadcrumb to move cursor.
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
- * TODO: Auto-scroll should only move to fit the
- *       entire element on the screen.
  **/
 
 function DartMark(frame) {
@@ -213,15 +211,49 @@ DartMark.prototype.generateNode = function(name, empty) {
 DartMark.prototype.scrollTo = function(element) {
 	"use strict";
 
-	var offset, scroll;
+	var win, node, offsetTop, offsetHeight, scrollTop, scrollHeight, scroll, margin;
 
-	offset = 0;
+	margin = 64;
+
+	win = this.frame.contentWindow;
+	scrollTop = win.scrollY;
+	scrollHeight = win.innerHeight;
+
+	offsetTop = 0;
+	offsetHeight = element.offsetHeight;
+
+	node = element;
 	do {
-		offset += element.offsetTop;
-		element = element.offsetParent;
-	} while (element);
+		offsetTop += node.offsetTop;
+		node = node.offsetParent;
+	} while (node);
 
-	scroll = offset - this.frame.contentWindow.innerHeight / 2;
+	/**
+	 * Warning: The following code may hurt your eyes.
+	 * Just remember that it used to be a lot worse.
+	 *
+	 * Process:
+	 * if (element top is below the top && fits entirely in the screen):
+	 *     if (element bottom is below the bottom):
+	 *         meet bottom of element with bottom of screen
+	 *     else:
+	 *         do nothing;
+	 * else:
+	 *     meet top of element with top of screen
+	 *
+	 **/
+
+	if (offsetTop - scrollTop > 0 && offsetHeight <= scrollHeight) {
+		var bottom = offsetTop + offsetHeight;
+		if (bottom > scrollTop + scrollHeight) {
+			scroll = bottom - scrollHeight + margin;
+		} else {
+			return;
+		}
+	} else {
+		scroll = offsetTop - margin;
+	}
+
 	this.frame.contentWindow.scrollTo (0, scroll);
 };
 
