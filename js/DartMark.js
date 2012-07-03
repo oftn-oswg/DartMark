@@ -9,6 +9,8 @@
  **/
 
 function DartMark(frame) {
+	"use strict";
+
 	if (!frame) {
 		throw new Error("Requires iframe element");
 	}
@@ -45,6 +47,8 @@ DartMark.prototype.shortcuts = {
 };
 
 DartMark.prototype.addEvents = function(element) {
+	"use strict";
+
 	var mapping, self;
 
 	self = this;
@@ -118,6 +122,8 @@ DartMark.prototype.addEvents = function(element) {
 };
 
 DartMark.prototype.reportError = function(message) {
+	"use strict";
+
 	var output;
 
 	output = document.getElementById ("dm_error");
@@ -133,6 +139,8 @@ DartMark.prototype.reportError = function(message) {
 };
 
 DartMark.prototype.setupRoot = function(callback) {
+	"use strict";
+
 	var node, doc, win, self;
 
 	self = this;
@@ -189,6 +197,8 @@ DartMark.prototype.setupRoot = function(callback) {
 };
 
 DartMark.prototype.generateNode = function(name, empty) {
+	"use strict";
+
 	var node;
 
 	node = document.createElement (name || "div");
@@ -201,18 +211,23 @@ DartMark.prototype.generateNode = function(name, empty) {
 };
 
 DartMark.prototype.scrollTo = function(element) {
+	"use strict";
+
 	var offset, scroll;
 
 	offset = 0;
 	do {
 		offset += element.offsetTop;
-	} while (element = element.offsetParent);
+		element = element.offsetParent;
+	} while (element);
 
 	scroll = offset - this.frame.contentWindow.innerHeight / 2;
 	this.frame.contentWindow.scrollTo (0, scroll);
 };
 
 DartMark.prototype.changeCursor = function(node) {
+	"use strict";
+
 	var className = "dm_cursor";
 	var output;
 
@@ -236,6 +251,8 @@ DartMark.prototype.changeCursor = function(node) {
 };
 
 DartMark.prototype.generatePath = function(element) {
+	"use strict";
+
 	var ul, li, span, classes;
 
 	ul = document.createElement ("ul");
@@ -249,7 +266,9 @@ DartMark.prototype.generatePath = function(element) {
 
 		classes = element.className.split (/\s+/);
 		for (var i = 0, len = classes.length; i < len; i++) {
-			if (!classes[i] || /^dm_/.test (classes[i])) continue;
+			if (!classes[i] || /^dm_/.test (classes[i])) {
+				continue;
+			}
 
 			span = document.createElement ("span");
 			span.classList.add ("dm_classname");
@@ -266,7 +285,9 @@ DartMark.prototype.generatePath = function(element) {
 
 		ul.insertBefore (li, ul.firstChild);
 
-		if (element === this.root) break;
+		if (element === this.root) {
+			break;
+		}
 
 		element = element.parentNode;
 	}
@@ -275,6 +296,7 @@ DartMark.prototype.generatePath = function(element) {
 };
 
 DartMark.prototype.isEmpty = function(node) {
+	"use strict";
 
 	var child, empty;
 	
@@ -301,14 +323,16 @@ DartMark.prototype.isEmpty = function(node) {
 };
 
 DartMark.prototype.prompt = function(directive, callback, original) {
+	"use strict";
+
 	var response;
 
 	this.frozen = true;
 
-	response = prompt (directive, original);
+	response = window.prompt (directive, original);
 
 	this.frozen = false;
-	if (response == null) {
+	if (response === null) {
 		callback.call (this, false);
 	} else {
 		callback.call (this, true, response);
@@ -316,20 +340,26 @@ DartMark.prototype.prompt = function(directive, callback, original) {
 };
 
 DartMark.prototype.confirm = function(directive, callback) {
+	"use strict";
+
 	var response;
 
 	this.frozen = true;
-	response = confirm (directive);
+	response = window.confirm (directive);
 	this.frozen = false;
 
 	callback.call (this, response);
 };
 
 DartMark.prototype.clearCursor = function() {
+	"use strict";
+
 	this.changeCursor (null);
 };
 
 DartMark.prototype.movePrev = function() {
+	"use strict";
+
 	var prev;
 
 	// Change cursor to previous sibling
@@ -352,6 +382,8 @@ DartMark.prototype.movePrev = function() {
 };
 
 DartMark.prototype.moveNext = function() {
+	"use strict";
+
 	var next;
 
 	// Change cursor to next sibling
@@ -374,6 +406,8 @@ DartMark.prototype.moveNext = function() {
 };
 
 DartMark.prototype.moveChild = function() {
+	"use strict";
+
 	var child;
 
 	// Change cursor to first child node
@@ -397,6 +431,8 @@ DartMark.prototype.moveChild = function() {
 };
 
 DartMark.prototype.moveUp = function() {
+	"use strict";
+
 	var up;
 
 	// Change cursor to parent node
@@ -412,6 +448,8 @@ DartMark.prototype.moveUp = function() {
 };
 
 DartMark.prototype.createPrev = function() {
+	"use strict";
+
 	var parent, node;
 
 	if (!this.cursor) {
@@ -427,6 +465,8 @@ DartMark.prototype.createPrev = function() {
 };
 
 DartMark.prototype.createNext = function() {
+	"use strict";
+
 	var parent, node;
 
 	if (!this.cursor) {
@@ -442,6 +482,8 @@ DartMark.prototype.createNext = function() {
 };
 
 DartMark.prototype.createFirst = function() {
+	"use strict";
+
 	var parent, node;
 
 	if (!this.cursor) {
@@ -456,6 +498,8 @@ DartMark.prototype.createFirst = function() {
 };
 
 DartMark.prototype.createLast = function() {
+	"use strict";
+
 	var parent, node;
 
 	if (!this.cursor) {
@@ -470,6 +514,8 @@ DartMark.prototype.createLast = function() {
 };
 
 DartMark.prototype.createParent = function() {
+	"use strict";
+
 	var parent, newnode, oldnode;
 
 	if (!this.cursor) {
@@ -489,6 +535,8 @@ DartMark.prototype.createParent = function() {
 };
 
 DartMark.prototype.editID = function() {
+	"use strict";
+
 	if (!this.cursor) {
 		throw new Error ("No node selected");
 	}
@@ -524,6 +572,8 @@ DartMark.prototype.editID = function() {
 };
 
 DartMark.prototype.removeNode = function() {
+	"use strict";
+
 	var parent, node, next;
 
 	if (!this.cursor) {
@@ -567,6 +617,8 @@ DartMark.prototype.removeNode = function() {
 };
 
 DartMark.prototype.replaceText = function() {
+	"use strict";
+
 	if (!this.cursor) {
 		throw new Error ("No node selected");
 	}
@@ -594,13 +646,15 @@ DartMark.prototype.replaceText = function() {
 };
 
 DartMark.prototype.replaceElement = function() {
+	"use strict";
+
 	if (!this.cursor) {
 		throw new Error ("No node selected");
 	} else if (this.cursor === this.root) {
 		throw new Error ("Cannot change element type of root node");
 	}
 
-	name = this.prompt ("Tag name: (e.g. h1, p, ul, li)", function(success, text) {
+	this.prompt ("Tag name: (e.g. h1, p, ul, li)", function(success, text) {
 		var cursor, node, next, newnode;
 
 		if (success) {
