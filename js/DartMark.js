@@ -5,7 +5,9 @@
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
  * TODO: Separate DOM handling code
- *       and DartMark core and interface code
+ *       and DartMark core and interface code.
+ * TODO: Copy/paste stack where insert commands
+ *       effectively perform a paste.
  **/
 
 function DartMark(frame) {
@@ -33,6 +35,8 @@ DartMark.prototype.shortcuts = {
 	Right: "moveChild",
 	Up: "movePrev",
 	Down: "moveNext",
+	PageUp: "moveFirst",
+	PageDown: "moveLast",
 
 	P: "createPrev",
 	N: "createNext",
@@ -63,6 +67,8 @@ DartMark.prototype.addEvents = function(element) {
 	mapping[13] = "Enter";
 	mapping[27] = "Escape";
 	mapping[32] = "Space";
+	mapping[33] = "PageUp";
+	mapping[34] = "PageDown";
 	mapping[37] = "Left";
 	mapping[38] = "Up";
 	mapping[39] = "Right";
@@ -88,6 +94,8 @@ DartMark.prototype.addEvents = function(element) {
 		if (e.shiftKey) {
 			key = "Shift" + key;
 		}
+
+		console.log (key);
 
 		action = self.shortcuts[key];
 		func = self[action];
@@ -477,93 +485,108 @@ DartMark.prototype.moveBack = function() {
 };
 
 DartMark.prototype.movePrev = function() {
-	"use strict";
+	var walker, node;
 
-	var prev;
-
-	// Change cursor to previous sibling
+	// Change cursor to nodeious sibling
 	if (!this.cursor) {
-		prev = this.root;
+		node = this.root;
 	} else if (this.cursor === this.root) {
-		throw new Error ("Root node has no previous node");
+		return;
 	} else {
-		prev = this.cursor;
-
-		do {
-			prev = prev.previousSibling;
-			if (!prev) {
-				prev = this.cursor.parentNode.lastChild;
-			}
-		} while (prev && prev.nodeType !== 1);
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		node = walker.previousSibling ();
+		if (!node) {
+			walker.parentNode ();
+			node = walker.lastChild ();
+		}
 	}
 
-	this.changeCursor (prev);
+	this.changeCursor (node);
 };
 
 DartMark.prototype.moveNext = function() {
-	"use strict";
+	var walker, node;
 
-	var next;
-
-	// Change cursor to next sibling
+	// Change cursor to node sibling
 	if (!this.cursor) {
-		next = this.root;
+		node = this.root;
 	} else if (this.cursor === this.root) {
-		throw new Error ("Root node has no next node");
+		return;
 	} else {
-		next = this.cursor;
-		
-		do {
-			next = next.nextSibling;
-			if (!next) {
-				next = this.cursor.parentNode.firstChild;
-			}
-		} while (next && next.nodeType !== 1);
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		node = walker.nextSibling ();
+		if (!node) {
+			walker.parentNode ();
+			node = walker.firstChild ();
+		}
 	}
 
-	this.changeCursor (next);
+	this.changeCursor (node);
 };
 
 DartMark.prototype.moveChild = function() {
-	"use strict";
+	var walker, node;
 
-	var child;
-
-	// Change cursor to first child node
 	if (!this.cursor) {
-		child = this.root;
+		node = this.root;
 	} else {
-
-		child = this.cursor.firstChild;
-
-		// Skip text nodes
-		while (child && child.nodeType !== 1) {
-			child = child.nextSibling;
-		}
-
-		if (!child) {
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		node = walker.firstChild ();
+		if (!node) {
 			throw new Error ("Node has no children");
 		}
 	}
 
-	this.changeCursor (child);
+	this.changeCursor (node);
 };
 
 DartMark.prototype.moveUp = function() {
-	"use strict";
+	var node;
 
-	var up;
-
-	// Change cursor to parent node
 	if (!this.cursor) {
-		up = this.root;
+		node = this.root;
 	} else if (this.cursor === this.root) {
-		throw new Error ("Root node has no parent node");
+		return;
 	} else {
-		up = this.cursor.parentNode;
+		node = this.cursor.parentNode;
 	}
 
-	this.changeCursor (up);
+	this.changeCursor (node);
+};
+
+DartMark.prototype.moveFirst = function() {
+	var walker, node;
+
+	if (!this.cursor) {
+		node = this.root;
+	} else if (this.cursor === this.root) {
+		return;
+	} else {
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		while (walker.previousSibling ());
+		node = walker.currentNode;
+	}
+	this.changeCursor (node);
+};
+
+DartMark.prototype.moveLast = function() {
+	var walker, node;
+
+	if (!this.cursor) {
+		node = this.root;
+	} else if (this.cursor === this.root) {
+		return;
+	} else {
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		while (walker.nextSibling ());
+		node = walker.currentNode;
+	}
+	this.changeCursor (node);
 };
 
 DartMark.prototype.createPrev = function() {
