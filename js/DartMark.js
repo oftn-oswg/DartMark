@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * DartMark things to-do:
  * TODO: Undo/redo support.
@@ -11,24 +13,20 @@
  **/
 
 function DartMark(frame) {
-	"use strict";
-
 	if (!frame) {
 		throw new Error("Requires iframe element");
 	}
 
 	this.frozen = false;
 	this.frame = frame;
-	this.setupRoot (function() {
-		this.changeCursor (this.root);
+	this.setupRoot(function () {
+		this.changeCursor(this.root);
 	});
 }
 
 DartMark.prototype.shortcuts = {};
 
-DartMark.prototype.addEvents = function(element) {
-	"use strict";
-
+DartMark.prototype.addEvents = function (element) {
 	var mapping, self;
 
 	self = this;
@@ -47,18 +45,18 @@ DartMark.prototype.addEvents = function(element) {
 	mapping[40] = "Down";
 	mapping[46] = "Delete";
 
-	element.addEventListener ("keydown", function(e) {
-		var action, func, key, match, ascii;
+	element.addEventListener("keydown", function (e) {
+		var action, func, key;
 
 		if (self.frozen || e.ctrlKey || e.metaKey || e.altKey) {
 			return;
 		}
 
-		self.reportError (false);
+		self.reportError(false);
 
 		key = e.keyCode;
 		if (key >= 65 && key <= 90) {
-			key = String.fromCharCode (key);
+			key = String.fromCharCode(key);
 		} else {
 			key = mapping[key] || key;
 		}
@@ -66,8 +64,6 @@ DartMark.prototype.addEvents = function(element) {
 		if (e.shiftKey) {
 			key = "Shift" + key;
 		}
-
-		console.log (key);
 
 		action = self.shortcuts[key];
 		func = self[action];
@@ -77,16 +73,16 @@ DartMark.prototype.addEvents = function(element) {
 		}
 
 		try {
-			func.call (self);
+			func.call(self);
 		} catch (e) {
-			self.reportError (e.message);
+			self.reportError(e.message);
 		}
 
-		e.preventDefault ();
+		e.preventDefault();
 		return false;
 	});
 
-	element.addEventListener ("mousedown", function(e) {
+	element.addEventListener("mousedown", function (e) {
 		var target;
 
 		if (self.frozen) {
@@ -102,35 +98,31 @@ DartMark.prototype.addEvents = function(element) {
 			target = self.root;
 		}
 
-		self.changeCursor (target);
-		self.frame.contentWindow.focus ();
+		self.changeCursor(target);
+		self.frame.contentWindow.focus();
 
-		e.preventDefault ();
-		e.stopPropagation ();
+		e.preventDefault();
+		e.stopPropagation();
 		return false;
 	});
 };
 
-DartMark.prototype.reportError = function(message) {
-	"use strict";
-
+DartMark.prototype.reportError = function (message) {
 	var output;
 
-	output = document.getElementById ("dm_error");
+	output = document.getElementById("dm_error");
 	if (message === false) {
-		output.classList.add ("hidden");
+		output.classList.add("hidden");
 	} else {
-		output.classList.remove ("hidden");
+		output.classList.remove("hidden");
 		while (output.firstChild) {
-			output.removeChild (output.firstChild);
+			output.removeChild(output.firstChild);
 		}
-		output.appendChild (document.createTextNode (String (message)));
+		output.appendChild(document.createTextNode(String(message)));
 	}
 };
 
-DartMark.prototype.setupRoot = function(callback) {
-	"use strict";
-
+DartMark.prototype.setupRoot = function (callback) {
 	var node, doc, win, self;
 
 	self = this;
@@ -140,9 +132,9 @@ DartMark.prototype.setupRoot = function(callback) {
 	// Check the ready state of the frame.
 	// If it's not loaded, recall this function later.
 	if (doc.readyState !== "complete") {
-		win.addEventListener ("load", function load() {
-			win.removeEventListener ("load", load, false);
-			self.setupRoot (callback);
+		win.addEventListener("load", function load() {
+			win.removeEventListener("load", load, false);
+			self.setupRoot(callback);
 		}, false);
 		return;
 	}
@@ -157,53 +149,49 @@ DartMark.prototype.setupRoot = function(callback) {
 
 		while (child) {
 			if (child.nodeType === 1) {
-				check.call (this, child);
+				check.call(this, child);
 			}
 			child = child.nextSibling;
 		}
 
-		if (this.isEmpty (node)) {
-			node.classList.add ("dm_empty");
+		if (this.isEmpty(node)) {
+			node.classList.add("dm_empty");
 		}
-	}).call (this, node);
+	}.call(this, node));
 
 	// Clear all children
 	/*while (node.lastChild) {
-		node.removeChild (node.lastChild);
+		node.removeChild(node.lastChild);
 	}*/
 
 	// Add necessary styles
-	var sheet = document.createElement ("style");
-	sheet.innerHTML = ".dm_empty { min-height: 6px; background: url(\""+location.href+"img/dm_empty.png\") repeat; } .dm_cursor { outline: 3px solid yellow } body { cursor: default; }";
-	doc.head.appendChild (sheet);
+	var sheet = document.createElement("style");
+	sheet.innerHTML = ".dm_empty { min-height: 6px; background: url(\"" + location.href + "img/dm_empty.png\") repeat; } .dm_cursor { outline: 3px solid yellow } body { cursor: default; }";
+	doc.head.appendChild(sheet);
 
 	// Set root, add keyboard events
 	this.root = node;
-	this.walker = doc.createTreeWalker (node, NodeFilter.SHOW_ELEMENT);
-	this.addEvents (this.frame.contentWindow);
+	this.walker = doc.createTreeWalker(node, 1);
+	this.addEvents(this.frame.contentWindow);
 
-	win.focus ();
+	win.focus();
 
-	callback.call (this);
+	callback.call(this);
 };
 
-DartMark.prototype.generateNode = function(name, empty) {
-	"use strict";
-
+DartMark.prototype.generateNode = function (name, empty) {
 	var node;
 
-	node = document.createElement (name || "div");
+	node = document.createElement(name || "div");
 
 	if (empty) {
-		node.classList.add ("dm_empty");
+		node.classList.add("dm_empty");
 	}
 
 	return node;
 };
 
-DartMark.prototype.scrollTo = function(element) {
-	"use strict";
-
+DartMark.prototype.scrollTo = function (element) {
 	var win, node, offsetTop, offsetHeight, scrollTop, scrollHeight, scroll, margin;
 
 	margin = 64;
@@ -236,7 +224,7 @@ DartMark.prototype.scrollTo = function(element) {
 	 *
 	 **/
 
-	if (offsetTop - scrollTop > 0 && offsetHeight <= scrollHeight) {
+	if (offsetTop > scrollTop && offsetHeight <= scrollHeight) {
 		var bottom = offsetTop + offsetHeight;
 		if (bottom > scrollTop + scrollHeight) {
 			scroll = bottom - scrollHeight + margin;
@@ -247,35 +235,33 @@ DartMark.prototype.scrollTo = function(element) {
 		scroll = offsetTop - margin;
 	}
 
-	this.frame.contentWindow.scrollTo (0, scroll);
+	this.frame.contentWindow.scrollTo(0, scroll);
 };
 
-DartMark.prototype.changeCursor = function(node) {
-	"use strict";
-
+DartMark.prototype.changeCursor = function (node) {
 	var className = "dm_cursor";
 	var output;
 
-	output = document.getElementById ("dm_selected");
+	output = document.getElementById("dm_selected");
 
 	// Remove current selection
 	if (this.cursor) {
-		this.cursor.classList.remove (className);
+		this.cursor.classList.remove(className);
 		while (output.firstChild) {
-			output.removeChild (output.firstChild);
+			output.removeChild(output.firstChild);
 		}
 	}
 
 	// Add new selection
 	this.cursor = node;
 	if (this.cursor) {
-		this.scrollTo (this.cursor);
-		this.cursor.classList.add (className);
-		output.appendChild (this.generatePath (this.cursor));
+		this.scrollTo(this.cursor);
+		this.cursor.classList.add(className);
+		output.appendChild(this.generatePath(this.cursor));
 	}
 };
 
-DartMark.prototype.getElementFromIndex = function(index) {
+DartMark.prototype.getElementFromIndex = function (index) {
 	var node, i, len;
 
 	i = 0;
@@ -293,7 +279,7 @@ DartMark.prototype.getElementFromIndex = function(index) {
 	return node;
 };
 
-DartMark.prototype.getIndexFromElement = function(element) {
+DartMark.prototype.getIndexFromElement = function (element) {
 	var index, node, onode, i;
 
 	index = [];
@@ -312,46 +298,44 @@ DartMark.prototype.getIndexFromElement = function(element) {
 			i++;
 		}
 		node = onode.parentNode;
-		index.unshift (i);
+		index.unshift(i);
 	}
 
 	return index;
 };
 
-DartMark.prototype.generatePath = function(element) {
-	"use strict";
-
+DartMark.prototype.generatePath = function (element) {
 	var ul, li, span, classes;
 
-	ul = document.createElement ("ul");
+	ul = document.createElement("ul");
 	while (true) {
-		li = document.createElement ("li");
+		li = document.createElement("li");
 
-		span = document.createElement ("span");
-		span.classList.add ("dm_nodename");
-		span.appendChild (document.createTextNode (element.nodeName.toLowerCase ()));
-		li.appendChild (span);
+		span = document.createElement("span");
+		span.classList.add("dm_nodename");
+		span.appendChild(document.createTextNode(element.nodeName.toLowerCase()));
+		li.appendChild(span);
 
-		classes = element.className.split (/\s+/);
+		classes = element.className.split(/\s+/);
 		for (var i = 0, len = classes.length; i < len; i++) {
-			if (!classes[i] || /^dm_/.test (classes[i])) {
+			if (!classes[i] || /^dm_/.test(classes[i])) {
 				continue;
 			}
 
-			span = document.createElement ("span");
-			span.classList.add ("dm_classname");
-			span.appendChild (document.createTextNode ("." + classes[i]));
-			li.appendChild (span);
+			span = document.createElement("span");
+			span.classList.add("dm_classname");
+			span.appendChild(document.createTextNode("." + classes[i]));
+			li.appendChild(span);
 		}
 
 		if (element.id) {
-			span = document.createElement ("span");
-			span.classList.add ("dm_id");
-			span.appendChild (document.createTextNode ("#" + element.id));
-			li.appendChild (span);
+			span = document.createElement("span");
+			span.classList.add("dm_id");
+			span.appendChild(document.createTextNode("#" + element.id));
+			li.appendChild(span);
 		}
 
-		ul.insertBefore (li, ul.firstChild);
+		ul.insertBefore(li, ul.firstChild);
 
 		if (element === this.root) {
 			break;
@@ -363,9 +347,7 @@ DartMark.prototype.generatePath = function(element) {
 	return ul;
 };
 
-DartMark.prototype.isEmpty = function(node) {
-	"use strict";
-
+DartMark.prototype.isEmpty = function (node) {
 	var child, empty;
 	
 	child = node.firstChild;
@@ -379,7 +361,7 @@ DartMark.prototype.isEmpty = function(node) {
 			// An element with text nodes will
 			// be defined "empty" if it's just
 			// whitespace.
-			if (!/^\s*$/.test (child.data)) {
+			if (!/^\s*$/.test(child.data)) {
 				empty = false;
 			}
 
@@ -390,42 +372,36 @@ DartMark.prototype.isEmpty = function(node) {
 	return empty;
 };
 
-DartMark.prototype.prompt = function(directive, callback, original) {
-	"use strict";
-
+DartMark.prototype.prompt = function (directive, callback, original) {
 	var response;
 
 	this.frozen = true;
 
-	response = window.prompt (directive, original);
+	response = window.prompt(directive, original);
 
 	this.frozen = false;
 	if (response === null) {
-		callback.call (this, false);
+		callback.call(this, false);
 	} else {
-		callback.call (this, true, response);
+		callback.call(this, true, response);
 	}
 };
 
-DartMark.prototype.confirm = function(directive, callback) {
-	"use strict";
-
+DartMark.prototype.confirm = function (directive, callback) {
 	var response;
 
 	this.frozen = true;
-	response = window.confirm (directive);
+	response = window.confirm(directive);
 	this.frozen = false;
 
-	callback.call (this, response);
+	callback.call(this, response);
 };
 
-DartMark.prototype.clearCursor = function() {
-	"use strict";
-
-	this.changeCursor (null);
+DartMark.prototype.clearCursor = function () {
+	this.changeCursor(null);
 };
 
-DartMark.prototype.moveForward = function() {
+DartMark.prototype.moveForward = function () {
 	var node, walker;
 
 	if (!this.cursor) {
@@ -433,30 +409,32 @@ DartMark.prototype.moveForward = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		node = walker.nextNode ();
+		node = walker.nextNode();
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveBackward = function() {
+DartMark.prototype.moveBackward = function () {
 	var node, walker;
 
 	walker = this.walker;
 
 	if (!this.cursor) {
 		walker.currentNode = this.root;
-		while (walker.nextNode ());
+		while (walker.nextNode()) {
+			continue;
+		}
 		node = walker.currentNode;
 	} else {
 		walker.currentNode = this.cursor;
-		node = walker.previousNode ();
+		node = walker.previousNode();
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.movePrev = function() {
+DartMark.prototype.movePrev = function () {
 	var walker, node;
 
 	// Change cursor to nodeious sibling
@@ -467,17 +445,17 @@ DartMark.prototype.movePrev = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		node = walker.previousSibling ();
+		node = walker.previousSibling();
 		if (!node) {
-			walker.parentNode ();
-			node = walker.lastChild ();
+			walker.parentNode();
+			node = walker.lastChild();
 		}
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveNext = function() {
+DartMark.prototype.moveNext = function () {
 	var walker, node;
 
 	// Change cursor to node sibling
@@ -488,17 +466,17 @@ DartMark.prototype.moveNext = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		node = walker.nextSibling ();
+		node = walker.nextSibling();
 		if (!node) {
-			walker.parentNode ();
-			node = walker.firstChild ();
+			walker.parentNode();
+			node = walker.firstChild();
 		}
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveChild = function() {
+DartMark.prototype.moveChild = function () {
 	var walker, node;
 
 	if (!this.cursor) {
@@ -506,16 +484,16 @@ DartMark.prototype.moveChild = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		node = walker.firstChild ();
+		node = walker.firstChild();
 		if (!node) {
-			throw new Error ("Node has no children");
+			throw new Error("Node has no children");
 		}
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveUp = function() {
+DartMark.prototype.moveUp = function () {
 	var node;
 
 	if (!this.cursor) {
@@ -526,10 +504,10 @@ DartMark.prototype.moveUp = function() {
 		node = this.cursor.parentNode;
 	}
 
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveFirst = function() {
+DartMark.prototype.moveFirst = function () {
 	var walker, node;
 
 	if (!this.cursor) {
@@ -539,13 +517,13 @@ DartMark.prototype.moveFirst = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		walker.parentNode ();
-		node = walker.firstChild ();
+		walker.parentNode();
+		node = walker.firstChild();
 	}
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.moveLast = function() {
+DartMark.prototype.moveLast = function () {
 	var walker, node;
 
 	if (!this.cursor) {
@@ -555,145 +533,131 @@ DartMark.prototype.moveLast = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		walker.parentNode ();
-		node = walker.lastChild ();
+		walker.parentNode();
+		node = walker.lastChild();
 	}
-	this.changeCursor (node);
+	this.changeCursor(node);
 };
 
-DartMark.prototype.createPrev = function() {
-	"use strict";
-
+DartMark.prototype.createPrev = function () {
 	var parent, node;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	} else if (this.cursor === this.root) {
-		throw new Error ("Cannot create node before root node");
+		throw new Error("Cannot create node before root node");
 	}
 
 	parent = this.cursor.parentNode;
-	node = this.generateNode (null, true);
+	node = this.generateNode(null, true);
 
-	parent.insertBefore (node, this.cursor);
+	parent.insertBefore(node, this.cursor);
 };
 
-DartMark.prototype.createNext = function() {
-	"use strict";
-
+DartMark.prototype.createNext = function () {
 	var parent, node;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	} else if (this.cursor === this.root) {
-		throw new Error ("Cannot create node after root node");
+		throw new Error("Cannot create node after root node");
 	}
 
 	parent = this.cursor.parentNode;
-	node = this.generateNode (null, true);
+	node = this.generateNode(null, true);
 
-	parent.insertBefore (node, this.cursor.nextSibling);
+	parent.insertBefore(node, this.cursor.nextSibling);
 };
 
-DartMark.prototype.createFirst = function() {
-	"use strict";
-
+DartMark.prototype.createFirst = function () {
 	var parent, node;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	}
 
 	parent = this.cursor;
-	node = this.generateNode (null, true);
+	node = this.generateNode(null, true);
 
-	parent.classList.remove ("dm_empty");
-	parent.insertBefore (node, parent.firstChild);
+	parent.classList.remove("dm_empty");
+	parent.insertBefore(node, parent.firstChild);
 };
 
-DartMark.prototype.createLast = function() {
-	"use strict";
-
+DartMark.prototype.createLast = function () {
 	var parent, node;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	}
 
 	parent = this.cursor;
-	node = this.generateNode (null, true);
+	node = this.generateNode(null, true);
 
-	parent.classList.remove ("dm_empty");
-	parent.appendChild (node);
+	parent.classList.remove("dm_empty");
+	parent.appendChild(node);
 };
 
-DartMark.prototype.createParent = function() {
-	"use strict";
-
+DartMark.prototype.createParent = function () {
 	var parent, newnode, oldnode;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	} else if (this.cursor === this.root) {
-		throw new Error ("Cannot reparent root node");
+		throw new Error("Cannot reparent root node");
 	}
 
 	parent = this.cursor.parentNode;
-	newnode = this.generateNode (null, false);
+	newnode = this.generateNode(null, false);
 	oldnode = this.cursor;
 
-	parent.replaceChild (newnode, oldnode);
-	newnode.appendChild (oldnode);
+	parent.replaceChild(newnode, oldnode);
+	newnode.appendChild(oldnode);
 
-	this.changeCursor (oldnode);
+	this.changeCursor(oldnode);
 };
 
-DartMark.prototype.editID = function() {
-	"use strict";
-
+DartMark.prototype.editID = function () {
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	}
 
-	this.prompt ("Element ID:", function(success, text) {
+	this.prompt("Element ID:", function (success, text) {
 		var doc, other;
 
 		if (success) {
 
 			// Check if it's a valid HTML ID
-			if (!/^\S+$/.test (text)) {
-				throw new Error ("IDs must contain no space characters and be non-empty");
+			if (!/^\S+$/.test(text)) {
+				throw new Error("IDs must contain no space characters and be non-empty");
 			}
 
 
 			doc = this.cursor.ownerDocument;
-			other = doc.getElementById (text);
+			other = doc.getElementById(text);
 
 			if (other) {
-				this.confirm ("ID already exists. Move ID?", function(confirmed) {
+				this.confirm("ID already exists. Move ID?", function (confirmed) {
 					if (confirmed) {
-						other.removeAttribute ("id");
-						this.cursor.setAttribute ("id", text);
-						this.changeCursor (this.cursor);
+						other.removeAttribute("id");
+						this.cursor.setAttribute("id", text);
+						this.changeCursor(this.cursor);
 					}
 				});
 			} else {
-				this.cursor.setAttribute ("id", text);
-				this.changeCursor (this.cursor);
+				this.cursor.setAttribute("id", text);
+				this.changeCursor(this.cursor);
 			}
 		}
 	}, this.cursor.id);
 };
 
-DartMark.prototype.removeNode = function() {
-	"use strict";
-
+DartMark.prototype.removeNode = function () {
 	var parent, node, next;
 
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	} else if (this.cursor === this.root) {
-		throw new Error ("Cannot remove root node");
+		throw new Error("Cannot remove root node");
 	}
 
 	parent = this.cursor.parentNode;
@@ -720,24 +684,22 @@ DartMark.prototype.removeNode = function() {
 		next = parent;
 	}
 
-	parent.removeChild (node);
+	parent.removeChild(node);
 
 	// If parent is now empty, add dm_empty class.
-	if (this.isEmpty (parent)) {
-		parent.classList.add ("dm_empty");
+	if (this.isEmpty(parent)) {
+		parent.classList.add("dm_empty");
 	}
 
-	this.changeCursor (next);
+	this.changeCursor(next);
 };
 
-DartMark.prototype.replaceText = function() {
-	"use strict";
-
+DartMark.prototype.replaceText = function () {
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	}
 
-	this.prompt ("Text contents:", function(success, text) {
+	this.prompt("Text contents:", function (success, text) {
 		var node;
 
 		node = this.cursor;
@@ -745,62 +707,60 @@ DartMark.prototype.replaceText = function() {
 		if (success) {
 			// Remove all children
 			while (node.lastChild) {
-				node.removeChild (node.lastChild);
+				node.removeChild(node.lastChild);
 			}
 
-			node.appendChild (document.createTextNode (text));
+			node.appendChild(document.createTextNode(text));
 
-			if (this.isEmpty (node)) {
-				node.classList.add ("dm_empty");
+			if (this.isEmpty(node)) {
+				node.classList.add("dm_empty");
 			} else {
-				node.classList.remove ("dm_empty");
+				node.classList.remove("dm_empty");
 			}
 		}
 	}, this.cursor.textContent || this.cursor.innerText);
 };
 
-DartMark.prototype.replaceElement = function() {
-	"use strict";
-
+DartMark.prototype.replaceElement = function () {
 	if (!this.cursor) {
-		throw new Error ("No node selected");
+		throw new Error("No node selected");
 	} else if (this.cursor === this.root) {
-		throw new Error ("Cannot change element type of root node");
+		throw new Error("Cannot change element type of root node");
 	}
 
-	this.prompt ("Tag name: (e.g. h1, p, ul, li)", function(success, text) {
+	this.prompt("Tag name:(e.g. h1, p, ul, li)", function (success, text) {
 		var cursor, node, next, newnode;
 
 		if (success) {
 			cursor = this.cursor;
-			newnode = this.generateNode (text, this.cursor.classList.contains ("dm_empty"));
+			newnode = this.generateNode(text, this.cursor.classList.contains("dm_empty"));
 
 			node = cursor.firstChild;
 			while (node) {
 				next = node.nextSibling;
-				newnode.appendChild (node);
+				newnode.appendChild(node);
 				node = next;
 			}
 
 			newnode.className = cursor.className;
 
 			if (cursor.id) {
-				newnode.setAttribute ("id", cursor.id);
+				newnode.setAttribute("id", cursor.id);
 			}
 
-			cursor.parentNode.replaceChild (newnode, cursor);
-			this.changeCursor (newnode);
+			cursor.parentNode.replaceChild(newnode, cursor);
+			this.changeCursor(newnode);
 		}
-	}, this.cursor.nodeName.toLowerCase ());
+	}, this.cursor.nodeName.toLowerCase());
 };
 
-DartMark.prototype.toggleHelp = function() {
+DartMark.prototype.toggleHelp = function () {
 	var help;
 
-	help = document.getElementById ("dm_info");
+	help = document.getElementById("dm_info");
 	if (help) {
-		help.classList.toggle ("hidden");
+		help.classList.toggle("hidden");
 	} else {
-		throw new Error ("Bug! Information box could not be located.");
+		throw new Error("Bug! Information box could not be located.");
 	}
 };
