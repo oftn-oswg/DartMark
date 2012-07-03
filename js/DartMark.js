@@ -27,6 +27,8 @@ DartMark.prototype.shortcuts = {
 	Space: "toggleHelp",
 
 	Escape: "clearCursor",
+	Tab: "moveForward",
+	ShiftTab: "moveBack",
 	Left: "moveUp",
 	Right: "moveChild",
 	Up: "movePrev",
@@ -57,6 +59,7 @@ DartMark.prototype.addEvents = function(element) {
 
 	mapping = [];
 	mapping[8] = "Backspace";
+	mapping[9] = "Tab";
 	mapping[13] = "Enter";
 	mapping[27] = "Escape";
 	mapping[32] = "Space";
@@ -69,7 +72,7 @@ DartMark.prototype.addEvents = function(element) {
 	element.addEventListener ("keydown", function(e) {
 		var action, func, key, match, ascii;
 
-		if (self.frozen || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
+		if (self.frozen || e.ctrlKey || e.metaKey || e.altKey) {
 			return;
 		}
 
@@ -80,6 +83,10 @@ DartMark.prototype.addEvents = function(element) {
 			key = String.fromCharCode (key);
 		} else {
 			key = mapping[key] || key;
+		}
+
+		if (e.shiftKey) {
+			key = "Shift" + key;
 		}
 
 		action = self.shortcuts[key];
@@ -192,6 +199,7 @@ DartMark.prototype.setupRoot = function(callback) {
 
 	// Set root, add keyboard events
 	this.root = node;
+	this.walker = doc.createTreeWalker (node, NodeFilter.SHOW_ELEMENT);
 	this.addEvents (this.frame.contentWindow);
 
 	win.focus ();
@@ -435,6 +443,37 @@ DartMark.prototype.clearCursor = function() {
 	"use strict";
 
 	this.changeCursor (null);
+};
+
+DartMark.prototype.moveForward = function() {
+	var node, walker;
+
+	if (!this.cursor) {
+		node = this.root;
+	} else {
+		walker = this.walker;
+		walker.currentNode = this.cursor;
+		node = walker.nextNode ();
+	}
+
+	this.changeCursor (node);
+};
+
+DartMark.prototype.moveBack = function() {
+	var node, walker;
+
+	walker = this.walker;
+
+	if (!this.cursor) {
+		walker.currentNode = this.root;
+		while (walker.nextNode ());
+		node = walker.currentNode;
+	} else {
+		walker.currentNode = this.cursor;
+		node = walker.previousNode ();
+	}
+
+	this.changeCursor (node);
 };
 
 DartMark.prototype.movePrev = function() {

@@ -45,9 +45,12 @@ body {
 .dm_box h2, .dm_box h3 {
 	font-size: 1em;
 }
+.dm_box h3 {
+	text-decoration: underline;
+}
 
 .dm_box dl {
-	width: 286px;
+	width: 300px;
 	overflow: hidden;
 	line-height: 1.2em;
 }
@@ -55,12 +58,13 @@ body {
 	font-weight: bold;
 	float: left;
 	clear: both;
-	width: 36px;
+	width: 58px;
+	padding-left: 3px;
 	margin-right: 10px;
 }
 .dm_box dd {
 	float: right;
-	width: 240px;
+	width: 224px;
 }
 
 .hidden {

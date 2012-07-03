@@ -1,6 +1,6 @@
 # DartMark
 
-Where dreams come true. DartMark is a WYSIWYG editor with a focus on speed and prototyping. The main benefits of it are:
+Where dreams come true. DartMark is an in-browser WYSIWYG editor with a focus on speed and prototyping. The main benefits of it are:
 
 - **Speed** All actions can be performed with just a keyboard.
 - **Ease-of-use** There is no need to switch back and forth between a CSS editor and previewing anymore.
@@ -20,7 +20,22 @@ DartMark is developed by members of [The ΩF:∅ Foundation](http://oftn.org/). 
 			<th colspan="2">Commands</th>
 		</tr>
 		<tr>
+			<th colspan="2">Interface</th>
+		</tr>
+		<tr>
+			<th>Space</th>
+			<td>Toggle the help display</td>
+		</tr>
+		<tr>
 			<th colspan="2">Cursor Movement</th>
+		</tr>
+		<tr>
+			<th>Tab</th>
+			<td>Next node</td>
+		</tr>
+		<tr>
+			<th>Shift+Tab</th>
+			<td>Previous node</td>
 		</tr>
 		<tr>
 			<th>Esc</td>
@@ -78,7 +93,7 @@ DartMark is developed by members of [The ΩF:∅ Foundation](http://oftn.org/). 
 			<td>Replace children with text</td>
 		</tr>
 		<tr>
-			<th>D/Delete</td>
+			<th>D or Delete</td>
 			<td>Remove node</td>
 		</tr>
 	</tbody>
