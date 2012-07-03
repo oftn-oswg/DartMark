@@ -89,7 +89,7 @@ DartMark.prototype.addEvents = function(element) {
 		try {
 			func.call (self);
 		} catch (e) {
-			self.reportError ("In function `" + action + "`: " + e.message);
+			self.reportError (e.message);
 		}
 
 		e.preventDefault ();
@@ -248,6 +248,49 @@ DartMark.prototype.changeCursor = function(node) {
 		this.cursor.classList.add (className);
 		output.appendChild (this.generatePath (this.cursor));
 	}
+};
+
+DartMark.prototype.getElementFromIndex = function(index) {
+	var node, i, len;
+
+	i = 0;
+	len = index.length;
+	node = this.root;
+
+	while (i < len) {
+		if (!node) {
+			return false;
+		}
+		node = node.childNodes[index[i]];
+		i++;
+	}
+
+	return node;
+};
+
+DartMark.prototype.getIndexFromElement = function(element) {
+	var index, node, onode, i;
+
+	index = [];
+	node = element;
+
+	while (node) {
+
+		if (node === this.root) {
+			break;
+		}
+
+		i = -1;
+		onode = node;
+		while (node) {
+			node = node.previousSibling;
+			i++;
+		}
+		node = onode.parentNode;
+		index.unshift (i);
+	}
+
+	return index;
 };
 
 DartMark.prototype.generatePath = function(element) {
