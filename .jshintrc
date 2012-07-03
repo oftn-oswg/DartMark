@@ -15,6 +15,7 @@
 	"trailing": true,
 
 	"globalstrict": true,
+	"loopfunc": true,
 	"smarttabs": true,
 
 	"browser": true

@@ -138,6 +138,10 @@ body {
 #dm_selected li {
 	display: inline-block;
 	list-style-type: none;
+	cursor: pointer;
+}
+#dm_selected li:hover span.dm_nodename {
+	text-decoration: underline;
 }
 
 #dm_selected li::after {

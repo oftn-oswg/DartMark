@@ -3,7 +3,6 @@
 /**
  * DartMark things to-do:
  * TODO: Undo/redo support.
- * TODO: Allow clicking breadcrumb to move cursor.
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
  * TODO: Separate DOM handling code
@@ -310,6 +309,12 @@ DartMark.prototype.generatePath = function (element) {
 	ul = document.createElement("ul");
 	while (true) {
 		li = document.createElement("li");
+
+		li.addEventListener("click", (function (self, element) {
+			return function () {
+				self.changeCursor (element);
+			};
+		}(this, element)));
 
 		span = document.createElement("span");
 		span.classList.add("dm_nodename");
