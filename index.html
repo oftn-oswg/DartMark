@@ -6,50 +6,96 @@
 <script type="text/javascript" src="js/DartMark.js"></script>
 </head>
 <body>
-<iframe class="dm_frame" src="template.html" id="dm"></iframe>
-<div id="dm_info">
-	<div class="dm_box dm_right">
-		<h2>Commands</h2>
-		<h3>Interface</h3>
-		<dl>
-			<dt>Space</dt><dd>Toggle this help</dd>
-		</dl>
-		<h3>Cursor Movement</h3>
-		<dl>
-			<dt>Tab</dt><dd>Next node</dd>
-			<dt>Shift+Tab</dt><dd>Previous node</dd>
-			<dt>Esc</dt><dd>Clear selection</dd>
-			<dt>Left</dt><dd>Parent node</dd>
-			<dt>Right</dt><dd>First child</dd>
-			<dt>Up</dt><dd>Previous sibling</dd>
-			<dt>Down</dt><dd>Next sibling</dd>
-			<dt>PageUp</dt><dd>First sibling</dd>
-			<dt>PageDown</dt><dd>Last sibling</dd>
-		</dl>
-		<h3>Node Manipulation</h3>
-		<dl>
-			<dt>P</dt><dd>Insert node before</dd>
-			<dt>N</dt><dd>Insert node after</dd>
-			<dt>B</dt><dd>Prepend node to children</dd>
-			<dt>A</dt><dd>Append node to children</dd>
-			<dt>W</dt><dd>Wrap node with new</dd>
-			<dt>E</dt><dd>Change element tag</dd>
-			<dt>I</dt><dd>Edit element ID</dd>
-			<dt>Enter</dt><dd>Replace children with text</dd>
-			<dt>D/Delete</dt><dd>Remove node</dd>
-		</dl>
+
+	<iframe class="dm_frame" src="template.html" id="dm"></iframe>
+	<div id="dm_info">
+		<div class="dm_box dm_right" id="dm_commands"></div>
+		<div class="dm_box dm_left">
+			<div id="dm_error" class="hidden"></div>
+			<div id="dm_selected"></div>
+		</div>
 	</div>
-	<div class="dm_box dm_left">
-		<div id="dm_error" class="hidden"></div>
-		<div id="dm_selected"></div>
-	</div>
-</div>
+
 <script type="text/javascript">
 var frame, dm;
+
+var commands = [
+	["Interface", [
+		["Space",    "toggleHelp",    "Toggle this help"]
+	]],
+	["Cursor Movement", [
+		["Tab",      "moveForward",   "Next node"],
+		["ShiftTab", "moveBackward",  "Previous node"],
+		["Left",     "moveUp",        "Parent node"],
+		["Right",    "moveChild",     "First child"],
+		["Up",       "movePrev",      "Previous sibling"],
+		["Down",     "moveNext",      "Next sibling"],
+		["PageUp",   "moveFirst",     "First sibling"],
+		["PageDown", "moveLast",      "Last sibling"],
+		["Esc",      "clearCursor",   "Clear selection"]
+	]],
+	["Node Manipulation", [
+		["P",             "createPrev",     "Insert node before"],
+		["N",             "createNext",     "Insert node after"],
+		["B",             "createFirst",    "Insert as first child"],
+		["A",             "createLast",     "Insert as last child"],
+		["W",             "createParent",   "Wrap node with new"],
+		["E",             "replaceElement", "Change element tag"],
+		["I",             "editID",         "Change element ID"],
+		["Enter",         "replaceText",    "Replace children with text"],
+		[["D", "Delete"], "removeNode",     "Remove node"]
+	]]
+];
+
+var shortcuts = (function(commands) {
+	var group, element, header, dl, dt, dd, shortcuts = {};
+
+	element = document.getElementById ("dm_commands");
+	header = document.createElement ("h2");
+	header.appendChild (document.createTextNode ("Commands"));
+	element.appendChild (header);
+
+	commands.forEach (function(command) {
+		group = command[0];
+		header = document.createElement ("h3");
+		header.appendChild (document.createTextNode (group));
+		element.appendChild (header);
+
+		dl = document.createElement ("dl");
+
+		var keys = command[1];
+		keys.forEach (function(key) {
+			dt = document.createElement ("dt");
+
+			if (typeof key[0] === "string") {
+				dt.appendChild (document.createTextNode (key[0]));
+				shortcuts[key[0]] = key[1];
+			} else {
+				dt.appendChild (document.createTextNode (key[0].join("/")));
+				key[0].forEach (function(k) {
+					shortcuts[k] = key[1];
+				});
+			}
+
+			dl.appendChild (dt);
+
+			dd = document.createElement ("dd");
+			dd.appendChild (document.createTextNode (key[2]));
+			dl.appendChild (dd);
+		});
+
+		element.appendChild (dl);
+
+	});
+
+	return shortcuts;
+
+})(commands);
 
 frame = document.getElementById ("dm");
 frame.addEventListener ("load", function() {
 	dm = new DartMark (frame);
+	dm.shortcuts = shortcuts;
 });
 </script>
 </body>

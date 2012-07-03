@@ -24,35 +24,7 @@ function DartMark(frame) {
 	});
 }
 
-DartMark.prototype.shortcuts = {
-
-	Space: "toggleHelp",
-
-	Escape: "clearCursor",
-	Tab: "moveForward",
-	ShiftTab: "moveBack",
-	Left: "moveUp",
-	Right: "moveChild",
-	Up: "movePrev",
-	Down: "moveNext",
-	PageUp: "moveFirst",
-	PageDown: "moveLast",
-
-	P: "createPrev",
-	N: "createNext",
-	B: "createFirst",
-	A: "createLast",
-	W: "createParent",
-
-	I: "editID",
-
-	D: "removeNode",
-	Delete: "removeNode",
-
-	Enter: "replaceText",
-	E: "replaceElement"
-
-};
+DartMark.prototype.shortcuts = {};
 
 DartMark.prototype.addEvents = function(element) {
 	"use strict";
@@ -467,7 +439,7 @@ DartMark.prototype.moveForward = function() {
 	this.changeCursor (node);
 };
 
-DartMark.prototype.moveBack = function() {
+DartMark.prototype.moveBackward = function() {
 	var node, walker;
 
 	walker = this.walker;
@@ -567,8 +539,8 @@ DartMark.prototype.moveFirst = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		while (walker.previousSibling ());
-		node = walker.currentNode;
+		walker.parentNode ();
+		node = walker.firstChild ();
 	}
 	this.changeCursor (node);
 };
@@ -583,8 +555,8 @@ DartMark.prototype.moveLast = function() {
 	} else {
 		walker = this.walker;
 		walker.currentNode = this.cursor;
-		while (walker.nextSibling ());
-		node = walker.currentNode;
+		walker.parentNode ();
+		node = walker.lastChild ();
 	}
 	this.changeCursor (node);
 };
