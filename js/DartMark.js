@@ -20,7 +20,7 @@ function DartMark(frame) {
 	this.setupRoot();
 }
 
-DartMark.prototype.output_info = null;
+DartMark.prototype.output_help = null;
 DartMark.prototype.output_error = null;
 DartMark.prototype.output_breadcrumb = null;
 
@@ -171,7 +171,7 @@ DartMark.prototype.setupRoot = function (callback) {
 
 	// Set root, add keyboard events
 	this.root = node;
-	this.walker = doc.createTreeWalker(node, 1);
+	this.walker = doc.createTreeWalker(node, 1, null, false);
 	this.addEvents(this.frame.contentWindow);
 
 	win.focus();
@@ -769,7 +769,7 @@ DartMark.prototype.replaceElement = function () {
 DartMark.prototype.toggleHelp = function () {
 	var help;
 
-	help = this.output_info;
+	help = this.output_help;
 	if (help) {
 		help.classList.toggle("hidden");
 	} else {
