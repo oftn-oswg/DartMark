@@ -267,6 +267,10 @@ DartMark.prototype.changeCursor = function (node) {
 	}
 };
 
+DartMark.prototype.updateCursor = function() {
+	this.changeCursor (this.cursor);
+};
+
 DartMark.prototype.getElementFromIndex = function (index) {
 	var node, i, len;
 
@@ -634,31 +638,34 @@ DartMark.prototype.editID = function () {
 	}
 
 	this.prompt("Element ID:", function (success, text) {
-		var doc, other;
+		var other;
 
 		if (success) {
 
-			// Check if it's a valid HTML ID
-			if (!/^\S+$/.test(text)) {
-				throw new Error("IDs must contain no space characters and be non-empty");
-			}
+			if (text.length === 0) {
+				this.cursor.removeAttribute ("id");
 
-
-			doc = this.cursor.ownerDocument;
-			other = doc.getElementById(text);
-
-			if (other) {
-				this.confirm("ID already exists. Move ID?", function (confirmed) {
-					if (confirmed) {
-						other.removeAttribute("id");
-						this.cursor.setAttribute("id", text);
-						this.changeCursor(this.cursor);
-					}
-				});
 			} else {
-				this.cursor.setAttribute("id", text);
-				this.changeCursor(this.cursor);
+				// Check if it's a valid HTML ID
+				if (!/^\S+$/.test(text)) {
+					throw new Error("IDs must contain no space characters and be non-empty");
+				}
+
+				other = this.cursor.ownerDocument.getElementById(text);
+				if (other) {
+					this.confirm("ID already exists. Move ID?", function (confirmed) {
+						if (confirmed) {
+							other.removeAttribute("id");
+							this.cursor.setAttribute("id", text);
+							this.updateCursor();
+						}
+					});
+				} else {
+					this.cursor.setAttribute("id", text);
+				}
 			}
+
+			this.updateCursor();
 		}
 	}, this.cursor.id);
 };
