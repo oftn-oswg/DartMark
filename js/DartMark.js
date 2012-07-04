@@ -16,13 +16,15 @@ function DartMark(frame) {
 		throw new Error("Requires iframe element");
 	}
 
-	this.frozen = false;
 	this.frame = frame;
-	this.setupRoot(function () {
-		this.changeCursor(this.root);
-	});
+	this.setupRoot();
 }
 
+DartMark.prototype.output_info = null;
+DartMark.prototype.output_error = null;
+DartMark.prototype.output_breadcrumb = null;
+
+DartMark.prototype.frozen = false;
 DartMark.prototype.shortcuts = {};
 
 DartMark.prototype.addEvents = function (element) {
@@ -109,7 +111,11 @@ DartMark.prototype.addEvents = function (element) {
 DartMark.prototype.reportError = function (message) {
 	var output;
 
-	output = document.getElementById("dm_error");
+	output = this.output_error;
+	if (!output) {
+		return;
+	}
+
 	if (message === false) {
 		output.classList.add("hidden");
 	} else {
@@ -158,11 +164,6 @@ DartMark.prototype.setupRoot = function (callback) {
 		}
 	}.call(this, node));
 
-	// Clear all children
-	/*while (node.lastChild) {
-		node.removeChild(node.lastChild);
-	}*/
-
 	// Add necessary styles
 	var sheet = document.createElement("style");
 	sheet.innerHTML = ".dm_empty { min-height: 6px; background: url(\"" + location.href + "img/dm_empty.png\") repeat; } .dm_cursor { outline: 3px solid yellow } body { cursor: default; }";
@@ -175,7 +176,9 @@ DartMark.prototype.setupRoot = function (callback) {
 
 	win.focus();
 
-	callback.call(this);
+	if (callback) {
+		callback.call(this);
+	}
 };
 
 DartMark.prototype.generateNode = function (name, empty) {
@@ -241,13 +244,15 @@ DartMark.prototype.changeCursor = function (node) {
 	var className = "dm_cursor";
 	var output;
 
-	output = document.getElementById("dm_selected");
+	output = this.output_breadcrumb;
 
 	// Remove current selection
 	if (this.cursor) {
 		this.cursor.classList.remove(className);
-		while (output.firstChild) {
-			output.removeChild(output.firstChild);
+		if (output) {
+			while (output.firstChild) {
+				output.removeChild(output.firstChild);
+			}
 		}
 	}
 
@@ -256,7 +261,9 @@ DartMark.prototype.changeCursor = function (node) {
 	if (this.cursor) {
 		this.scrollTo(this.cursor);
 		this.cursor.classList.add(className);
-		output.appendChild(this.generatePath(this.cursor));
+		if (output) {
+			output.appendChild(this.generatePath(this.cursor));
+		}
 	}
 };
 
@@ -762,7 +769,7 @@ DartMark.prototype.replaceElement = function () {
 DartMark.prototype.toggleHelp = function () {
 	var help;
 
-	help = document.getElementById("dm_info");
+	help = this.output_info;
 	if (help) {
 		help.classList.toggle("hidden");
 	} else {

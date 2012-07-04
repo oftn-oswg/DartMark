@@ -96,6 +96,9 @@ frame = document.getElementById ("dm");
 frame.addEventListener ("load", function() {
 	dm = new DartMark (frame);
 	dm.shortcuts = shortcuts;
+	dm.output_help = document.getElementById ("dm_info");
+	dm.output_error = document.getElementById ("dm_error");
+	dm.output_breadcrumb = document.getElementById ("dm_selected");
 });
 </script>
 </body>
