@@ -56,8 +56,6 @@ DartMark.prototype.addEvents = function (element) {
 			return;
 		}
 
-		self.reportError(false);
-
 		key = e.keyCode;
 		if (key >= 65 && key <= 90) {
 			key = String.fromCharCode(key);
@@ -77,6 +75,7 @@ DartMark.prototype.addEvents = function (element) {
 		}
 
 		try {
+			self.reportError(false);
 			func.call(self);
 			self.updateCursor();
 		} catch (error) {
