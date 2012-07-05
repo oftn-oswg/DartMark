@@ -5,8 +5,6 @@
  * TODO: Undo/redo support.
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
- * TODO: Separate DOM handling code
- *       and DartMark core and interface code.
  * TODO: Copy/paste stack where insert commands
  *       effectively perform a paste.
  **/
@@ -17,6 +15,7 @@ function DartMark(frame) {
 	}
 
 	this.frame = frame;
+	this.acts = new DartMarkActions;
 	this.setupRoot();
 }
 
@@ -159,7 +158,7 @@ DartMark.prototype.setupRoot = function (callback) {
 			child = child.nextSibling;
 		}
 
-		if (this.isEmpty(node)) {
+		if (this.acts.isEmpty(node)) {
 			node.classList.add("dm_empty");
 		}
 	}.call(this, node));
@@ -171,6 +170,7 @@ DartMark.prototype.setupRoot = function (callback) {
 
 	// Set root, add keyboard events
 	this.root = node;
+	this.acts.root = node;
 	this.walker = doc.createTreeWalker(node, 1, null, false);
 	this.addEvents(this.frame.contentWindow);
 
@@ -179,18 +179,6 @@ DartMark.prototype.setupRoot = function (callback) {
 	if (callback) {
 		callback.call(this);
 	}
-};
-
-DartMark.prototype.generateNode = function (name, empty) {
-	var node;
-
-	node = document.createElement(name || "div");
-
-	if (empty) {
-		node.classList.add("dm_empty");
-	}
-
-	return node;
 };
 
 DartMark.prototype.scrollTo = function (element) {
@@ -269,6 +257,10 @@ DartMark.prototype.changeCursor = function (node) {
 
 DartMark.prototype.updateCursor = function() {
 	this.changeCursor (this.cursor);
+};
+
+DartMark.prototype.clearCursor = function () {
+	this.changeCursor(null);
 };
 
 DartMark.prototype.getElementFromIndex = function (index) {
@@ -363,30 +355,6 @@ DartMark.prototype.generatePath = function (element) {
 	return ul;
 };
 
-DartMark.prototype.isEmpty = function (node) {
-	var child, empty;
-	
-	child = node.firstChild;
-	empty = true;
-
-	while (child) {
-		if (child.nodeType === 1) {
-			empty = false;
-		} else if (child.nodeType === 3) {
-
-			// An element with text nodes will
-			// be defined "empty" if it's just
-			// whitespace.
-			if (!/^\s*$/.test(child.data)) {
-				empty = false;
-			}
-
-		}
-		child = child.nextSibling;
-	}
-
-	return empty;
-};
 
 DartMark.prototype.prompt = function (directive, callback, original) {
 	var response;
@@ -411,10 +379,6 @@ DartMark.prototype.confirm = function (directive, callback) {
 	this.frozen = false;
 
 	callback.call(this, response);
-};
-
-DartMark.prototype.clearCursor = function () {
-	this.changeCursor(null);
 };
 
 DartMark.prototype.moveForward = function () {
@@ -556,80 +520,39 @@ DartMark.prototype.moveLast = function () {
 };
 
 DartMark.prototype.createPrev = function () {
-	var parent, node;
-
 	if (!this.cursor) {
 		throw new Error("No node selected");
-	} else if (this.cursor === this.root) {
-		throw new Error("Cannot create node before root node");
 	}
-
-	parent = this.cursor.parentNode;
-	node = this.generateNode(null, true);
-
-	parent.insertBefore(node, this.cursor);
+	this.acts.createPrev(this.cursor);
 };
 
 DartMark.prototype.createNext = function () {
-	var parent, node;
-
 	if (!this.cursor) {
 		throw new Error("No node selected");
-	} else if (this.cursor === this.root) {
-		throw new Error("Cannot create node after root node");
 	}
-
-	parent = this.cursor.parentNode;
-	node = this.generateNode(null, true);
-
-	parent.insertBefore(node, this.cursor.nextSibling);
+	this.acts.createNext(this.cursor);
 };
 
 DartMark.prototype.createFirst = function () {
-	var parent, node;
-
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-
-	parent = this.cursor;
-	node = this.generateNode(null, true);
-
-	parent.classList.remove("dm_empty");
-	parent.insertBefore(node, parent.firstChild);
+	this.acts.createFirst(this.cursor);
 };
 
 DartMark.prototype.createLast = function () {
-	var parent, node;
-
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-
-	parent = this.cursor;
-	node = this.generateNode(null, true);
-
-	parent.classList.remove("dm_empty");
-	parent.appendChild(node);
+	this.acts.createLast(this.cursor);
 };
 
 DartMark.prototype.createParent = function () {
-	var parent, newnode, oldnode;
-
 	if (!this.cursor) {
 		throw new Error("No node selected");
-	} else if (this.cursor === this.root) {
-		throw new Error("Cannot reparent root node");
 	}
-
-	parent = this.cursor.parentNode;
-	newnode = this.generateNode(null, false);
-	oldnode = this.cursor;
-
-	parent.replaceChild(newnode, oldnode);
-	newnode.appendChild(oldnode);
-
-	this.changeCursor(oldnode);
+	this.acts.createParent(this.cursor);
+	this.updateCursor();
 };
 
 DartMark.prototype.editID = function () {
@@ -638,137 +561,56 @@ DartMark.prototype.editID = function () {
 	}
 
 	this.prompt("Element ID:", function (success, text) {
-		var other;
-
 		if (success) {
-
-			if (text.length === 0) {
-				this.cursor.removeAttribute ("id");
-
-			} else {
-				// Check if it's a valid HTML ID
-				if (!/^\S+$/.test(text)) {
-					throw new Error("IDs must contain no space characters and be non-empty");
-				}
-
-				other = this.cursor.ownerDocument.getElementById(text);
-				if (other) {
-					this.confirm("ID already exists. Move ID?", function (confirmed) {
-						if (confirmed) {
-							other.removeAttribute("id");
-							this.cursor.setAttribute("id", text);
-							this.updateCursor();
-						}
-					});
-				} else {
-					this.cursor.setAttribute("id", text);
-				}
-			}
-
+			this.acts.editID(this.cursor, text);
 			this.updateCursor();
 		}
 	}, this.cursor.id);
 };
 
 DartMark.prototype.removeNode = function () {
-	var parent, node, next;
+	var cursor, walker;
 
 	if (!this.cursor) {
 		throw new Error("No node selected");
-	} else if (this.cursor === this.root) {
-		throw new Error("Cannot remove root node");
 	}
 
-	parent = this.cursor.parentNode;
-	node = this.cursor;
+	walker = this.walker;
+	walker.currentNode = this.cursor;
 
 	// The new cursor should be on
 	// the next, or the previous, or the parent.
-	// Next sibling
-	next = this.cursor;
-	do {
-		next = next.nextSibling;
-	} while (next && next.nodeType !== 1);
-	
-	// Previous sibling
-	if (!next) {
-		next = this.cursor;
-		do {
-			next = next.previousSibling;
-		} while (next && next.nodeType !== 1);
+	cursor = walker.nextSibling();
+	if (!cursor) {
+		cursor = walker.previousSibling();
+		if (!cursor) {
+			cursor = walker.parentNode();
+		}
 	}
 
-	// Parent node
-	if (!next) {
-		next = parent;
-	}
-
-	parent.removeChild(node);
-
-	// If parent is now empty, add dm_empty class.
-	if (this.isEmpty(parent)) {
-		parent.classList.add("dm_empty");
-	}
-
-	this.changeCursor(next);
+	this.acts.removeNode(this.cursor);
+	this.changeCursor(cursor);
 };
 
 DartMark.prototype.replaceText = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-
+	var text = this.acts.textContent(this.cursor);
 	this.prompt("Text contents:", function (success, text) {
-		var node;
-
-		node = this.cursor;
-
 		if (success) {
-			// Remove all children
-			while (node.lastChild) {
-				node.removeChild(node.lastChild);
-			}
-
-			node.appendChild(document.createTextNode(text));
-
-			if (this.isEmpty(node)) {
-				node.classList.add("dm_empty");
-			} else {
-				node.classList.remove("dm_empty");
-			}
+			this.acts.replaceText(this.cursor, text);
 		}
-	}, this.cursor.textContent || this.cursor.innerText);
+	}, text);
 };
 
 DartMark.prototype.replaceElement = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
-	} else if (this.cursor === this.root) {
-		throw new Error("Cannot change element type of root node");
 	}
-
 	this.prompt("Tag name:(e.g. h1, p, ul, li)", function (success, text) {
-		var cursor, node, next, newnode;
-
 		if (success) {
-			cursor = this.cursor;
-			newnode = this.generateNode(text, this.cursor.classList.contains("dm_empty"));
-
-			node = cursor.firstChild;
-			while (node) {
-				next = node.nextSibling;
-				newnode.appendChild(node);
-				node = next;
-			}
-
-			newnode.className = cursor.className;
-
-			if (cursor.id) {
-				newnode.setAttribute("id", cursor.id);
-			}
-
-			cursor.parentNode.replaceChild(newnode, cursor);
-			this.changeCursor(newnode);
+			this.changeCursor(this.acts.replaceElement(this.cursor, text));
 		}
 	}, this.cursor.nodeName.toLowerCase());
 };
