@@ -6,6 +6,7 @@
  * TODO: Support class support and styling.
  * TODO: Copy/paste stack where insert commands
  *       effectively perform a paste.
+ * TODO: Don't use window.{prompt,confirm}
  **/
 
 function DartMark(frame) {
@@ -278,7 +279,8 @@ DartMark.prototype.generatePath = function (element) {
 
 		li.addEventListener("click", (function (self, element) {
 			return function () {
-				self.changeCursor (element);
+				self.changeCursor(element);
+				self.updateCursor();
 			};
 		}(this, element)));
 
