@@ -2,7 +2,6 @@
 
 /**
  * DartMark things to-do:
- * TODO: Undo/redo support.
  * TODO: Support multiple cursors (somehow).
  * TODO: Support class support and styling.
  * TODO: Copy/paste stack where insert commands
@@ -15,9 +14,13 @@ function DartMark(frame) {
 	}
 
 	this.frame = frame;
-	this.acts = new DartMarkActions;
+	this.undostack = new UndoStack(this);
+	this.dom = new DartMarkActions();
 	this.setupRoot();
 }
+
+DartMark.prototype.cursor = null;
+DartMark.prototype.newcursor = null;
 
 DartMark.prototype.output_help = null;
 DartMark.prototype.output_error = null;
@@ -74,8 +77,9 @@ DartMark.prototype.addEvents = function (element) {
 
 		try {
 			func.call(self);
-		} catch (e) {
-			self.reportError(e.message);
+			self.updateCursor();
+		} catch (error) {
+			self.reportError(error.message);
 		}
 
 		e.preventDefault();
@@ -100,6 +104,7 @@ DartMark.prototype.addEvents = function (element) {
 
 		self.changeCursor(target);
 		self.frame.contentWindow.focus();
+		self.updateCursor();
 
 		e.preventDefault();
 		e.stopPropagation();
@@ -158,7 +163,7 @@ DartMark.prototype.setupRoot = function (callback) {
 			child = child.nextSibling;
 		}
 
-		if (this.acts.isEmpty(node)) {
+		if (this.dom.isEmpty(node)) {
 			node.classList.add("dm_empty");
 		}
 	}.call(this, node));
@@ -170,7 +175,7 @@ DartMark.prototype.setupRoot = function (callback) {
 
 	// Set root, add keyboard events
 	this.root = node;
-	this.acts.root = node;
+	this.dom.root = node;
 	this.walker = doc.createTreeWalker(node, 1, null, false);
 	this.addEvents(this.frame.contentWindow);
 
@@ -229,6 +234,11 @@ DartMark.prototype.scrollTo = function (element) {
 };
 
 DartMark.prototype.changeCursor = function (node) {
+	this.newcursor = node;
+};
+
+DartMark.prototype.updateCursor = function () {
+
 	var className = "dm_cursor";
 	var output;
 
@@ -245,7 +255,7 @@ DartMark.prototype.changeCursor = function (node) {
 	}
 
 	// Add new selection
-	this.cursor = node;
+	this.cursor = this.newcursor;
 	if (this.cursor) {
 		this.scrollTo(this.cursor);
 		this.cursor.classList.add(className);
@@ -255,55 +265,8 @@ DartMark.prototype.changeCursor = function (node) {
 	}
 };
 
-DartMark.prototype.updateCursor = function() {
-	this.changeCursor (this.cursor);
-};
-
 DartMark.prototype.clearCursor = function () {
 	this.changeCursor(null);
-};
-
-DartMark.prototype.getElementFromIndex = function (index) {
-	var node, i, len;
-
-	i = 0;
-	len = index.length;
-	node = this.root;
-
-	while (i < len) {
-		if (!node) {
-			return false;
-		}
-		node = node.childNodes[index[i]];
-		i++;
-	}
-
-	return node;
-};
-
-DartMark.prototype.getIndexFromElement = function (element) {
-	var index, node, onode, i;
-
-	index = [];
-	node = element;
-
-	while (node) {
-
-		if (node === this.root) {
-			break;
-		}
-
-		i = -1;
-		onode = node;
-		while (node) {
-			node = node.previousSibling;
-			i++;
-		}
-		node = onode.parentNode;
-		index.unshift(i);
-	}
-
-	return index;
 };
 
 DartMark.prototype.generatePath = function (element) {
@@ -353,6 +316,23 @@ DartMark.prototype.generatePath = function (element) {
 	}
 
 	return ul;
+};
+
+DartMark.prototype.undo = function () {
+	this.undostack.undo();
+};
+
+DartMark.prototype.redo = function () {
+	this.undostack.redo();
+};
+
+DartMark.prototype.pushAction = function (perform, data) {
+	var return_value;
+
+	return_value = perform.call(this, true, data);
+	this.undostack.push(perform, data);
+
+	return return_value;
 };
 
 
@@ -523,36 +503,92 @@ DartMark.prototype.createPrev = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.acts.createPrev(this.cursor);
+	this.pushAction(
+		function (redo, index) {
+			var node = this.dom.getNodeFromIndex(index[0]);
+			if (redo) {
+				this.dom.createPrev(node);
+			} else {
+				this.dom.removePrev(node);
+			}
+			// Our index has changed :(
+			index[0] = this.dom.getIndexFromNode(node);
+		},
+		[this.dom.getIndexFromNode(this.cursor)]
+	);
+
 };
 
 DartMark.prototype.createNext = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.acts.createNext(this.cursor);
+	this.pushAction(
+		function (redo, index) {
+			var node = this.dom.getNodeFromIndex(index);
+			if (redo) {
+				this.dom.createNext(node);
+			} else {
+				this.dom.removeNext(node);
+			}
+		},
+		this.dom.getIndexFromNode(this.cursor)
+	);
+
 };
 
 DartMark.prototype.createFirst = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.acts.createFirst(this.cursor);
+	this.pushAction(
+		function (redo, index) {
+			var node = this.dom.getNodeFromIndex(index);
+			if (redo) {
+				this.dom.createFirst(node);
+			} else {
+				this.dom.removeFirst(node);
+			}
+		},
+		this.dom.getIndexFromNode(this.cursor)
+	);
+
 };
 
 DartMark.prototype.createLast = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.acts.createLast(this.cursor);
+	this.pushAction(
+		function (redo, index) {
+			var node = this.dom.getNodeFromIndex(index);
+			if (redo) {
+				this.dom.createLast(node);
+			} else {
+				this.dom.removeLast(node);
+			}
+		},
+		this.dom.getIndexFromNode(this.cursor)
+	);
 };
 
 DartMark.prototype.createParent = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.acts.createParent(this.cursor);
-	this.updateCursor();
+	this.pushAction(
+		function (redo, index) {
+			var node = this.dom.getNodeFromIndex(index[0]);
+			if (redo) {
+				this.dom.createParent(node);
+			} else {
+				this.dom.removeParent(node);
+			}
+			// Our index has changed :(
+			index[0] = this.dom.getIndexFromNode(node);
+		},
+		[this.dom.getIndexFromNode(this.cursor)]
+	);
 };
 
 DartMark.prototype.editID = function () {
@@ -560,12 +596,18 @@ DartMark.prototype.editID = function () {
 		throw new Error("No node selected");
 	}
 
-	this.prompt("Element ID:", function (success, text) {
+	var from = this.cursor.id;
+
+	this.prompt("Element ID:", function (success, to) {
 		if (success) {
-			this.acts.editID(this.cursor, text);
-			this.updateCursor();
+			this.pushAction(
+				function (redo, data) {
+					this.dom.editID(this.cursor, redo ? data.to : data.from);
+				},
+				[this.dom.getIndexFromNode(this.cursor), from, to]
+			);
 		}
-	}, this.cursor.id);
+	}, from);
 };
 
 DartMark.prototype.removeNode = function () {
@@ -588,7 +630,16 @@ DartMark.prototype.removeNode = function () {
 		}
 	}
 
-	this.acts.removeNode(this.cursor);
+	this.pushAction(
+		function (redo, data) {
+			if (redo) {
+				this.dom.removeNode(this.dom.getNodeFromIndex(data[0]));
+			} else {
+				this.dom.insertNodeAt(data[1], data[0]);
+			}
+		},
+		[this.dom.getIndexFromNode(this.cursor), this.cursor]
+	);
 	this.changeCursor(cursor);
 };
 
@@ -596,23 +647,76 @@ DartMark.prototype.replaceText = function () {
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	var text = this.acts.textContent(this.cursor);
+	var text = this.dom.textContent(this.cursor);
 	this.prompt("Text contents:", function (success, text) {
+		var data, node, children;
+
+		// Save current child nodes
+		children = [];
+		node = this.cursor.firstChild;
+		do {
+			children.push(node);
+			node = node.nextSibling;
+		} while (node);
+
+		data = {
+			node: this.dom.getIndexFromNode(this.cursor),
+			from: children,
+			to: text
+		};
+
 		if (success) {
-			this.acts.replaceText(this.cursor, text);
+			this.pushAction(
+				function (redo, data) {
+					var node = this.dom.getNodeFromIndex(data.node);
+					if (redo) {
+						this.dom.replaceText(this.cursor, data.to);
+					} else {
+						while (node.lastChild) {
+							node.removeChild(node.lastChild);
+						}
+						for (var i = 0, len = data.from.length; i < len; i++) {
+							node.appendChild(data.from[i]);
+						}
+					}
+				},
+				data
+			);
 		}
 	}, text);
 };
 
 DartMark.prototype.replaceElement = function () {
+	var from;
+
 	if (!this.cursor) {
 		throw new Error("No node selected");
 	}
-	this.prompt("Tag name:(e.g. h1, p, ul, li)", function (success, text) {
+
+	from = this.cursor.nodeName.toLowerCase();
+
+	this.prompt("Tag name:(e.g. h1, p, ul, li)", function (success, to) {
+		var data;
+
+		data = {
+			node: this.dom.getIndexFromNode(this.cursor),
+			from: from,
+			to: to
+		};
+
 		if (success) {
-			this.changeCursor(this.acts.replaceElement(this.cursor, text));
+			this.pushAction(
+				function (redo, data) {
+					var node = this.dom.getNodeFromIndex(data.node);
+					var sub = this.dom.replaceElement(node, redo ? data.to : data.from);
+					if (node === this.cursor) {
+						this.changeCursor(sub);
+					}
+				},
+				data
+			);
 		}
-	}, this.cursor.nodeName.toLowerCase());
+	}, from);
 };
 
 DartMark.prototype.toggleHelp = function () {

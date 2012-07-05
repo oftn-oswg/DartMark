@@ -1,36 +1,44 @@
+"use strict";
+
+
+function UndoItem (perform, data) {
+	this.perform = perform;
+	this.data = data;
+}
+
 /**
  * UndoStack:
  * Easy undo-redo in JavaScript.
  **/
 
-var UndoStack = function (self) {
+function UndoStack(self) {
 	this.stack = [];
-	this.index = -1;
+	this.current = -1;
 	this.self = self;
-};
+}
 
 /**
- * UndoStack#push (undo, redo);
+ * UndoStack#push (action, data);
+ * perform(true, data)  -> Function which performs redo based on previous state
+ * perform(false, data) -> Function which performs undo based on current state
  * data -> Argument passed to undo/redo functions
- * undo -> Function which performs undo based on current state
- * redo -> Function which performs redo based on previous state
  **/
-UndoStack.prototype.push = function (data, undo, redo) {
-	this.index++;
+UndoStack.prototype.push = function (perform, data) {
+	this.current++;
 
 	// We need to invalidate all undo items after this new one
 	// or people are going to be very confused.
-	this.stack.splice(this.index);
-	this.stack.push(new UndoItem(undo, redo, data));
+	this.stack.splice(this.current);
+	this.stack.push(new UndoItem(perform, data));
 };
 
 UndoStack.prototype.undo = function () {
 	var item;
 
-	if (this.index >= 0) {
-		item = this.stack[this.index];
-		item.undo.call(this.self, item.data);
-		this.index--;
+	if (this.current >= 0) {
+		item = this.stack[this.current];
+		item.perform.call(this.self, false, item.data);
+		this.current--;
 	} else {
 		throw new Error("Already at oldest change");
 	}
@@ -39,18 +47,15 @@ UndoStack.prototype.undo = function () {
 UndoStack.prototype.redo = function () {
 	var item;
 
-	item = this.stack[this.index + 1];
+	item = this.stack[this.current + 1];
 	if (item) {
-		item.redo.call(this.self, item.data);
-		this.index++;
+		item.perform.call(this.self, true, item.data);
+		this.current++;
 	} else {
 		throw new Error("Already at newest change");
 	}
 };
 
-
-var UndoItem = function (undo, redo, data) {
-	this.undo = undo;
-	this.redo = redo;
-	this.data = data;
+UndoStack.prototype.invalidateAll = function () {
+	this.stack = [];
 };

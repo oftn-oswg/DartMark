@@ -3,6 +3,7 @@
 <head>
 <title>DartMark</title>
 <link type="text/css" href="css/DartMark.css" rel="stylesheet"/>
+<script type="text/javascript" src="js/UndoStack.js"></script>
 <script type="text/javascript" src="js/DartMark.js"></script>
 <script type="text/javascript" src="js/DartMarkActions.js"></script>
 </head>
@@ -22,7 +23,9 @@ var frame, dm;
 
 var commands = [
 	["Interface", [
-		["Space",    "toggleHelp",    "Toggle this help"]
+		["Space",    "toggleHelp",    "Toggle this help"],
+		["U",        "undo",          "Undo"],
+		["R",        "redo",          "Redo"]
 	]],
 	["Cursor Movement", [
 		["Tab",      "moveForward",   "Next node"],
