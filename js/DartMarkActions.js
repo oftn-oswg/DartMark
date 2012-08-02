@@ -201,8 +201,9 @@ DartMarkActions.prototype = {
 
 	insertNodeAt: function (node, index) {
 		// Used as inverse of removeNode only, no error checking needed
-		var childindex = index[index.length - 1];
-		var parent = this.getNodeFromIndex(index.slice(0, -1));
+		index = index.slice();
+		var childindex = index.pop();
+		var parent = this.getNodeFromIndex(index);
 		parent.insertBefore(node, parent.childNodes[childindex]);
 		if (!this.isEmpty(parent)) {
 			parent.classList.remove("dm_empty");
