@@ -601,11 +601,19 @@ DartMark.prototype.editID = function () {
 
 	this.prompt("Element ID:", function (success, to) {
 		if (success) {
+			var data;
+
+			data = {
+				node: this.dom.getIndexFromNode(this.cursor),
+				from: from,
+				to: to
+			};
+
 			this.pushAction(
 				function (redo, data) {
-					this.dom.editID(this.cursor, redo ? data.to : data.from);
+					this.dom.editID(this.dom.getNodeFromIndex(data.node), redo ? data.to : data.from);
 				},
-				[this.dom.getIndexFromNode(this.cursor), from, to]
+				data
 			);
 		}
 	}, from);
@@ -655,10 +663,10 @@ DartMark.prototype.replaceText = function () {
 		// Save current child nodes
 		children = [];
 		node = this.cursor.firstChild;
-		do {
+		while (node) {
 			children.push(node);
 			node = node.nextSibling;
-		} while (node);
+		}
 
 		data = {
 			node: this.dom.getIndexFromNode(this.cursor),
