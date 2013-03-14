@@ -9,7 +9,7 @@ Where dreams come true. DartMark is an in-browser WYSIWYG editor with a focus on
 
 ## Questions?
 
-DartMark is developed by members of [The ΩF:∅ Foundation](http://oftn.org/). Ask in #oftn on Freenode (irc.freenode.net) for support or if you have any questions about the project.
+DartMark is developed by members of the [ΩF:∅ Working Group](http://wg.oftn.org/). Ask in #oftn on Freenode (irc.freenode.net) for support or if you have any questions about the project.
 
 
 ## Default keyboard mappings
